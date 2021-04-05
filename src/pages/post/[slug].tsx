@@ -13,6 +13,10 @@ import ptBR from 'date-fns/locale/pt-BR'
 
 import Header from '../../components/Header'
 
+import { useRouter } from 'next/router'
+
+import { FiUser, FiCalendar, FiClock } from 'react-icons/fi'
+
 interface Post {
   first_publication_date: string | null;
   data: {
@@ -36,6 +40,12 @@ interface PostProps {
 
 export default function Post({ post }: PostProps) {
 
+  const { isFallback } = useRouter()
+
+  if (isFallback) {
+    return "Carregando..."
+  }
+
   const postToText = post.data.content.map(content => {
     return content.body.map(body => body.text).join(" ")
   }).join(" ")
@@ -50,8 +60,35 @@ export default function Post({ post }: PostProps) {
         <title>{post.data.title} | spacenews</title>
       </Head>
 
-      <main>
-        <Header />
+      <Header />
+      <div className={styles.banner}>
+        <img src={post.data.banner.url} alt="Post banner" />
+      </div>
+
+      <main className={styles.container}>
+
+        <div className={styles.title}>
+          <h1>{post.data.title}</h1>
+
+          <div>
+            <p>
+              <FiCalendar style={{ fontSize: "1.125rem", marginRight: "0.5rem" }} />
+              {format(
+                new Date(post.first_publication_date),
+                "dd MMM yyyy",
+                { locale: ptBR }
+              )}
+            </p>
+            <p>
+              <FiUser style={{ fontSize: "1.125rem", marginRight: "0.5rem" }} />
+              {post.data.author}
+            </p>
+            <p>
+              <FiClock style={{ fontSize: "1.125rem", marginRight: "0.5rem" }} />
+              {readingTime} min
+            </p>
+          </div>
+        </div>
 
         {post.data.content.map(section => {
           const html = RichText.asHtml(section.body)
@@ -88,27 +125,11 @@ export const getStaticPaths: GetStaticPaths = async () => {
     paths,
     fallback: true
   }
-};
+}
 
 export const getStaticProps: GetStaticProps = async ({ params }) => {
   const prismic = getPrismicClient();
-  const response = await prismic.getByUID("posts", String(params.slug), {});
-
-  const post: Post = {
-    first_publication_date: format(
-      new Date(response.first_publication_date),
-      "dd MMM yyyy",
-      { locale: ptBR }
-    ),
-    data: {
-      title: response.data.title,
-      banner: {
-        url: response.data.banner.url
-      },
-      author: response.data.author,
-      content: response.data.content
-    }
-  }
+  const post = await prismic.getByUID("posts", String(params.slug), {});
 
   return {
     props: { post }

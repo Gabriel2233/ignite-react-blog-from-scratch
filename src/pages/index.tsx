@@ -25,36 +25,39 @@ interface Post {
   };
 }
 
-interface PostResponse {
+interface PostPagination {
   next_page: string;
   results: Post[];
 }
 
 interface HomeProps {
-  postsResponse: PostResponse;
+  postsPagination: PostPagination;
 }
 
-export default function Home({ postsResponse }: HomeProps) {
-
-  const [posts, setPosts] = useState<PostResponse>(postsResponse)
+export default function Home({ postsPagination }: HomeProps) {
+  const [posts, setPosts] = useState<PostPagination>(postsPagination)
 
   async function handleLoadMorePosts() {
-    if (!posts.next_page) {
-      alert("No more posts :(")
-      return
-    }
-
     try {
-      const response = await fetch(postsResponse.next_page)
+      const response = await fetch(postsPagination.next_page)
       const { results, next_page } = await response.json()
+
+      const data = results.map((post: Post) => ({
+        uid: post.uid,
+        first_publication_date: post.first_publication_date,
+        data: {
+          title: post.data.title,
+          subtitle: post.data.subtitle,
+          author: post.data.author,
+        },
+      }));
 
       setPosts(state => {
         return {
-          results: state.results.concat(results),
+          results: [...state.results, ...data],
           next_page
         }
       })
-
     } catch (err) {
       console.log(err)
     }
@@ -68,7 +71,7 @@ export default function Home({ postsResponse }: HomeProps) {
 
       <main className={styles.container}>
         <img src="/spacelogo.svg" alt="logo" />
-        {posts.results.map(post => (
+        {posts?.results.map(post => (
           <section key={post.uid}>
             <Link href={`/post/${post.uid}`}>
               <h1>{post.data.title}</h1>
@@ -92,7 +95,7 @@ export default function Home({ postsResponse }: HomeProps) {
           </section>
         ))}
 
-        <button onClick={handleLoadMorePosts}>Carregar mais posts</button>
+        {posts?.next_page && <button onClick={handleLoadMorePosts}>Carregar mais posts</button>}
       </main>
     </>
   )
@@ -103,12 +106,26 @@ export const getStaticProps: GetStaticProps = async () => {
   const postsResponse = await prismic.query([
     Prismic.predicates.at("document.type", "posts")
   ], {
+    fetch: ['posts.title', 'posts.subtitle', 'posts.author'],
     pageSize: 1
   })
 
+  const results = postsResponse.results.map((post: Post) => ({
+    uid: post.uid,
+    first_publication_date: post.first_publication_date,
+    data: {
+      title: post.data.title,
+      subtitle: post.data.subtitle,
+      author: post.data.author,
+    },
+  }));
+
   return {
     props: {
-      postsResponse
+      postsPagination: {
+        results,
+        next_page: postsResponse.next_page
+      }
     }
   }
 };
