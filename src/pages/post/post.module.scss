@@ -2,6 +2,11 @@
   max-width: 720px;
   margin: 0 auto;
 
+  hr {
+    margin: 2rem 0;
+    border: 0.5px solid grey;
+  }
+
   .title {
     h1 {
       font-size: 2.75rem;
@@ -26,10 +31,17 @@
         color: var(--gray-500);
       }
     }
+
+    span {
+      position: relative;
+      top: -3rem;
+      font-size: 0.875rem;
+      color: var(--gray-500);
+    }
   }
 
   section {
-    margin-top: 4rem;
+    margin-top: 1.5rem;
     width: 100%;
 
     h2 {
@@ -56,6 +68,30 @@
       & + p {
         margin-top: 1.25rem;
       }
+    }
+  }
+
+  .navigation {
+    width: 100%;
+    padding: 1.5rem 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    :nth-child(2) {
+      text-align: end;
+    }
+
+    h3 {
+      font-size: 1.125rem;
+      margin-bottom: 0.75rem;
+      font-weight: 400;
+    }
+
+    a {
+      color: var(--pink-500);
+      font-weight: bold;
+      cursor: pointer
     }
   }
 }  
